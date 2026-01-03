@@ -1,0 +1,5 @@
+{
+  "name": "DexIndex",
+  "description": "A next-generation Pokedex powered by PokeAPI for data and Gemini AI for advanced strategic analysis and lore.",
+  "requestFramePermissions": []
+}
