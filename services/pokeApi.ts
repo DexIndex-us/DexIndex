@@ -3,51 +3,51 @@ import { PokemonListResult, PokemonDetails, PokemonSpecies } from '../types';
 const BASE_URL = 'https://pokeapi.co/api/v2';
 const GQL_ENDPOINT = 'https://beta.pokeapi.co/graphql/v1beta';
 
-export const STARTER_POKEMON_NAMES = [
-  // Gen 1
-  "Charmander", "Charmeleon", "Charizard",
-  "Squirtle", "Wartortle", "Blastoise",
-  "Bulbasaur", "Ivysaur", "Venusaur",
-  // Gen 2
-  "Cyndaquil", "Quilava", "Typhlosion",
-  "Totodile", "Croconaw", "Feraligatr",
-  "Chikorita", "Bayleef", "Meganium",
-  // Gen 3
-  "Torchic", "Combusken", "Blaziken",
-  "Mudkip", "Marshtomp", "Swampert",
-  "Treecko", "Grovyle", "Sceptile",
-  // Gen 4
-  "Chimchar", "Monferno", "Infernape",
-  "Piplup", "Prinplup", "Empoleon",
-  "Turtwig", "Grotle", "Torterra",
-  // Gen 5
-  "Tepig", "Pignite", "Emboar",
-  "Oshawott", "Dewott", "Samurott",
-  "Snivy", "Servine", "Serperior",
-  // Gen 6
-  "Fennekin", "Braixen", "Delphox",
-  "Froakie", "Frogadier", "Greninja",
-  "Chespin", "Quilladin", "Chesnaught",
-  // Gen 7
-  "Litten", "Torracat", "Incineroar",
-  "Popplio", "Brionne", "Primarina",
-  "Rowlet", "Dartrix", "Decidueye",
-  // Gen 8
-  "Scorbunny", "Raboot", "Cinderace",
-  "Sobble", "Drizzile", "Inteleon",
-  "Grookey", "Thwackey", "Rillaboom",
-  // Gen 9
-  "Fuecoco", "Crocalor", "Skeledirge",
-  "Quaxly", "Quaxwell", "Quaquaval",
-  "Sprigatito", "Floragato", "Meowscarada"
+export const POKEMON_COLLECTION_NAMES = [
+  // Starters (1-81)
+  "Charmander", "Charmeleon", "Charizard", "Squirtle", "Wartortle", "Blastoise", "Bulbasaur", "Ivysaur", "Venusaur",
+  "Cyndaquil", "Quilava", "Typhlosion", "Totodile", "Croconaw", "Feraligatr", "Chikorita", "Bayleef", "Meganium",
+  "Torchic", "Combusken", "Blaziken", "Mudkip", "Marshtomp", "Swampert", "Treecko", "Grovyle", "Sceptile",
+  "Chimchar", "Monferno", "Infernape", "Piplup", "Prinplup", "Empoleon", "Turtwig", "Grotle", "Torterra",
+  "Tepig", "Pignite", "Emboar", "Oshawott", "Dewott", "Samurott", "Snivy", "Servine", "Serperior",
+  "Fennekin", "Braixen", "Delphox", "Froakie", "Frogadier", "Greninja", "Chespin", "Quilladin", "Chesnaught",
+  "Litten", "Torracat", "Incineroar", "Popplio", "Brionne", "Primarina", "Rowlet", "Dartrix", "Decidueye",
+  "Scorbunny", "Raboot", "Cinderace", "Sobble", "Drizzile", "Inteleon", "Grookey", "Thwackey", "Rillaboom",
+  "Fuecoco", "Crocalor", "Skeledirge", "Quaxly", "Quaxwell", "Quaquaval", "Sprigatito", "Floragato", "Meowscarada",
+  
+  // Expanded List (Starting at 82)
+  "Abra", "Aerodactyl", "Alakazam", "Arbok", "Arcanine", "Beedrill", "Bellsprout", "Butterfree", "Caterpie", "Chansey",
+  "Clefable", "Clefairy", "Cloyster", "Cubone", "Dewgong", "Diglett", "Ditto", "Dodrio", "Doduo", "Dragonair",
+  "Dragonite", "Dratini", "Drowzee", "Dugtrio", "Eevee", "Ekans", "Electabuzz", "Electrode", "Exeggcute", "Exeggutor",
+  "Farfetch'd", "Fearow", "Flareon", "Gastly", "Gengar", "Geodude", "Gloom", "Golbat", "Golduck", "Goldeen",
+  "Golem", "Graveler", "Grimer", "Growlithe", "Gyarados", "Haunter", "Hitmonchan", "Hitmonlee", "Horsea", "Hypno",
+  "Jigglypuff", "Jolteon", "Jynx", "Kabuto", "Kabutops", "Kadabra", "Kakuna", "Kangaskhan", "Kingler", "Koffing",
+  "Krabby", "Lapras", "Lickitung", "Machamp", "Machoke", "Machop", "Magikarp", "Magmar", "Magnemite", "Magneton",
+  "Mankey", "Marowak", "Meowth", "Metapod", "Mr. Mime", "Muk", "Nidoking", "Nidoqueen", "Nidoran♀", "Nidoran♂",
+  "Nidorina", "Nidorino", "Ninetales", "Oddish", "Omanyte", "Omastar", "Onix", "Paras", "Parasect", "Persian",
+  "Pidgeot", "Pidgeotto", "Pidgey", "Pikachu", "Pinsir", "Poliwag", "Poliwhirl", "Poliwrath", "Ponyta", "Porygon",
+  "Primeape", "Psyduck", "Raichu", "Rapidash", "Raticate", "Rattata", "Rhydon", "Rhyhorn", "Sandshrew", "Sandslash",
+  "Scyther", "Seadra", "Seaking", "Seel", "Shellder", "Slowbro", "Slowpoke", "Snorlax", "Spearow", "Starmie",
+  "Staryu", "Tangela", "Tauros", "Tentacool", "Tentacruel", "Vaporeon", "Venomoth", "Venonat", "Victreebel", "Vileplume",
+  "Voltorb", "Vulpix", "Weedle", "Weepinbell", "Weezing", "Wigglytuff", "Zubat"
 ];
 
-export const fetchAllStarterPokemon = async (): Promise<PokemonDetails[]> => {
-  const names = STARTER_POKEMON_NAMES.map(n => n.toLowerCase());
+// Helper to normalize names for PokeAPI
+const normalizeName = (name: string): string => {
+  return name.toLowerCase()
+    .replace('♀', '-f')
+    .replace('♂', '-m')
+    .replace("'", '')
+    .replace('.', '')
+    .replace(' ', '-');
+};
+
+export const fetchAllPokemonInCollection = async (): Promise<PokemonDetails[]> => {
+  const apiNames = POKEMON_COLLECTION_NAMES.map(n => normalizeName(n));
   
   const query = `
     query {
-      pokemon_v2_pokemon(where: {name: {_in: ${JSON.stringify(names)}}}) {
+      pokemon_v2_pokemon(where: {name: {_in: ${JSON.stringify(apiNames)}}}) {
         id
         name
         height
@@ -83,8 +83,8 @@ export const fetchAllStarterPokemon = async (): Promise<PokemonDetails[]> => {
     });
 
     const { data } = await response.json();
+    if (!data) return [];
     
-    // Map GraphQL response to PokemonDetails
     return data.pokemon_v2_pokemon.map((p: any) => ({
       id: p.id,
       name: p.name,
@@ -118,7 +118,6 @@ export const fetchAllStarterPokemon = async (): Promise<PokemonDetails[]> => {
     }));
   } catch (error) {
     console.error("GraphQL fetch failed", error);
-    // Fallback if GraphQL fails: return empty array or handle gracefully
     return [];
   }
 };
