@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { PokemonDetails } from './types';
-import { fetchAllPokemonInCollection, POKEMON_COLLECTION_NAMES } from './services/pokeApi';
+import { fetchAllPokemonInCollection, POKEMON_COLLECTION_NAMES, normalizePokemonName } from './services/pokeApi';
 import { PokemonCard } from './components/PokemonCard';
 import { PokemonDetail } from './components/PokemonDetail';
 import { Logo } from './components/Logo';
@@ -15,12 +15,10 @@ const App: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showIntro, setShowIntro] = useState(true);
   
-  // Requirement: Scrolling to top when switching views (Enter/Exit)
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [view]);
 
-  // Requirement: Load data immediately in background during intro/home phase
   useEffect(() => {
     let isMounted = true;
     
@@ -30,31 +28,32 @@ const App: React.FC = () => {
         const details = await fetchAllPokemonInCollection();
         
         if (isMounted) {
-          // Pre-calculate lookup Map for O(1) indexing to avoid UI lag on enter
-          const nameToIdMap = new Map();
+          const nameToIdMap = new Map<string, number>();
+
+          // Build custom numbering based on the order of POKEMON_COLLECTION_NAMES
           POKEMON_COLLECTION_NAMES.forEach((name, index) => {
-            const normalized = name.toLowerCase()
-              .replace('♀', '-f')
-              .replace('♂', '-m')
-              .replace("'", '')
-              .replace('.', '')
-              .replace(' ', '-');
-            
+            const normalized = normalizePokemonName(name);
             const customIndex = index + 1;
             
-            // Map the simple name to its index
             nameToIdMap.set(normalized, customIndex);
-            
-            // Specifically handle mapping for hyphenated PokeAPI names back to our simple list
+
+            // Variety overrides (kept for robustness if users search by variety name)
             if (normalized === 'wormadam') nameToIdMap.set('wormadam-plant', customIndex);
-            if (normalized === 'mime-jr') nameToIdMap.set('mime-jr', customIndex);
             if (normalized === 'basculin') nameToIdMap.set('basculin-red-striped', customIndex);
             if (normalized === 'darmanitan') nameToIdMap.set('darmanitan-standard', customIndex);
+            if (normalized === 'giratina') nameToIdMap.set('giratina-altered', customIndex);
+            if (normalized === 'landorus') nameToIdMap.set('landorus-incarnate', customIndex);
+            if (normalized === 'thundurus') nameToIdMap.set('thundurus-incarnate', customIndex);
+            if (normalized === 'tornadus') nameToIdMap.set('tornadus-incarnate', customIndex);
+            if (normalized === 'deoxys') nameToIdMap.set('deoxys-normal', customIndex);
+            if (normalized === 'keldeo') nameToIdMap.set('keldeo-ordinary', customIndex);
+            if (normalized === 'meloetta') nameToIdMap.set('meloetta-aria', customIndex);
+            if (normalized === 'shaymin') nameToIdMap.set('shaymin-land', customIndex);
           });
 
           const detailsWithCustomId = details.map(p => ({
             ...p,
-            customId: nameToIdMap.get(p.name.toLowerCase()) || 9999
+            customId: nameToIdMap.get(p.name.toLowerCase()) || p.id
           }));
 
           const sortedList = detailsWithCustomId.sort((a, b) => (a.customId || 0) - (b.customId || 0));
@@ -77,7 +76,7 @@ const App: React.FC = () => {
     return pokemonList.filter(p => 
       p.name.toLowerCase().includes(term) || 
       p.id.toString() === term ||
-      (p.customId && p.customId.toString() === term)
+      (p.customId && p.customId.toString().padStart(4, '0').includes(term))
     );
   }, [pokemonList, searchTerm]);
 
@@ -88,7 +87,6 @@ const App: React.FC = () => {
         <IntroAnimation onComplete={() => setShowIntro(false)} />
       )}
 
-      {/* Global Background Layer */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#1a1f2e] to-slate-900"></div>
         <div className="absolute inset-0 opacity-20" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
@@ -100,7 +98,6 @@ const App: React.FC = () => {
           <Home onLaunch={() => setView('dex')} />
         ) : (
           <>
-            {/* Header / Nav for Dex View */}
             <header className="w-full pt-8 pb-6 flex flex-col items-center px-4 sticky top-0 bg-slate-900/95 backdrop-blur-2xl z-30 border-b border-white/5 shadow-xl">
                <div className="flex items-center gap-4 mb-6">
                  <button 

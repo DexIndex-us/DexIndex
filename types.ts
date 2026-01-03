@@ -1,3 +1,4 @@
+
 export interface PokemonListResult {
   name: string;
   url: string;
@@ -62,6 +63,13 @@ export interface PokemonSpecies {
     genus: string;
     language: {
       name: string;
+    };
+  }[];
+  varieties: {
+    is_default: boolean;
+    pokemon: {
+      name: string;
+      url: string;
     };
   }[];
 }

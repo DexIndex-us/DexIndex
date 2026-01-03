@@ -34,6 +34,7 @@ export const PokemonCard: React.FC<PokemonCardProps> = ({ pokemon, onClick }) =>
             alt={pokemon.name}
             className="w-full h-full object-contain drop-shadow-xl group-hover:scale-115 transition-transform duration-500 cubic-bezier(0.34, 1.56, 0.64, 1)"
             loading="lazy"
+            decoding="async"
           />
         </div>
         
