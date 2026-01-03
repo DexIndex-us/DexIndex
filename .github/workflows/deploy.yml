@@ -1,6 +1,6 @@
 name: Deploy to GitHub Pages
 
-on:
+on: 
   push:
     branches: ["main"] # or "master" if your branch is named master
   workflow_dispatch:
