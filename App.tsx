@@ -39,7 +39,17 @@ const App: React.FC = () => {
               .replace("'", '')
               .replace('.', '')
               .replace(' ', '-');
-            nameToIdMap.set(normalized, index + 1);
+            
+            const customIndex = index + 1;
+            
+            // Map the simple name to its index
+            nameToIdMap.set(normalized, customIndex);
+            
+            // Specifically handle mapping for hyphenated PokeAPI names back to our simple list
+            if (normalized === 'wormadam') nameToIdMap.set('wormadam-plant', customIndex);
+            if (normalized === 'mime-jr') nameToIdMap.set('mime-jr', customIndex);
+            if (normalized === 'basculin') nameToIdMap.set('basculin-red-striped', customIndex);
+            if (normalized === 'darmanitan') nameToIdMap.set('darmanitan-standard', customIndex);
           });
 
           const detailsWithCustomId = details.map(p => ({

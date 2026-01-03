@@ -2,7 +2,7 @@ import { PokemonListResult, PokemonDetails, PokemonSpecies } from '../types';
 
 const BASE_URL = 'https://pokeapi.co/api/v2';
 const GQL_ENDPOINT = 'https://beta.pokeapi.co/graphql/v1beta';
-const CACHE_KEY = 'dexindex_pokemon_cache_v3';
+const CACHE_KEY = 'dexindex_pokemon_cache_v6';
 
 export const POKEMON_COLLECTION_NAMES = [
   // Starters (1-81)
@@ -26,7 +26,7 @@ export const POKEMON_COLLECTION_NAMES = [
   "Krabby", "Lapras", "Lickitung", "Machamp", "Machoke", "Machop", "Magikarp", "Magmar", "Magnemite", "Magneton",
   "Mankey", "Marowak", "Meowth", "Metapod", "Mr. Mime", "Muk", "Nidoking", "Nidoqueen", "Nidoran♀", "Nidoran♂",
   "Nidorina", "Nidorino", "Ninetales", "Oddish", "Omanyte", "Omastar", "Onix", "Paras", "Parasect", "Persian",
-  "Pidgeot", "Pidgeotto", "Pidgey", "Pikachu", "Pinsir", "Poliwag", "Poliwhirl", "Poliwrath", "Ponyta", "Porygon",
+  "Pidgeot", "Pidgeotto", "Pidgey", "Pidgey", "Pikachu", "Pinsir", "Poliwag", "Poliwhirl", "Poliwrath", "Ponyta", "Porygon",
   "Primeape", "Psyduck", "Raichu", "Rapidash", "Raticate", "Rattata", "Rhydon", "Rhyhorn", "Sandshrew", "Sandslash",
   "Scyther", "Seadra", "Seaking", "Seel", "Shellder", "Slowbro", "Slowpoke", "Snorlax", "Spearow", "Starmie",
   "Staryu", "Tangela", "Tauros", "Tentacool", "Tentacruel", "Vaporeon", "Venomoth", "Venonat", "Victreebel", "Vileplume",
@@ -41,17 +41,30 @@ export const POKEMON_COLLECTION_NAMES = [
   "Sunflora", "Sunkern", "Swinub", "Teddiursa", "Togepi", "Togetic", "Tyranitar", "Tyrogue", "Umbreon", "Unown",
   "Ursaring", "Wobbuffet", "Wooper", "Xatu", "Yanma",
 
-  // New Gen 3 Collection (User Requested alphabetical list)
-  "Absol", "Aggron", "Altaria", "Anorith", "Armaldo", "Aron", "Azurill", "Bagon", "Baltoy", "Banette", "Barboach", "Beautifly", "Beldum", "Breloom", "Cacnea", "Cacturne", "Camerupt", "Carvanha", "Cascoon", "Castform", "Chimecho", "Clamperl", "Claydol", "Corphish", "Cradily", "Crawdaunt", "Delcatty", "Dusclops", "Duskull", "Dustox", "Electrike", "Exploud", "Feebas", "Flygon", "Gardevoir", "Glalie", "Gorebyss", "Grumpig", "Gulpin", "Hariyama", "Huntail", "Illumise", "Kecleon", "Kirlia", "Lairon", "Lileep", "Linoone", "Lombre", "Lotad", "Loudred", "Ludicolo", "Lunatone", "Luvdisc", "Makuhita", "Manectric", "Masquerain", "Mawile", "Medicham", "Meditite", "Metagross", "Metang", "Mightyena", "Milotic", "Minun", "Nincada", "Ninjask", "Nosepass", "Numel", "Nuzleaf", "Pelipper", "Plusle", "Poochyena", "Ralts", "Relicanth", "Roselia", "Sableye", "Salamence", "Sealeo", "Seedot", "Seviper", "Sharpedo", "Shedinja", "Shelgon", "Shiftry", "Shroomish", "Shuppet", "Silcoon", "Skitty", "Slaking", "Slakoth", "Snorunt", "Solrock", "Spheal", "Spinda", "Spoink", "Surskit", "Swablu", "Swalot", "Swellow", "Taillow", "Torkoal", "Trapinch", "Tropius", "Vibrava", "Vigoroth", "Volbeat", "Wailmer", "Wailord", "Walrein", "Whiscash", "Whismur", "Wingull", "Wurmple", "Wynaut", "Zangoose", "Zigzagoon"
+  // Gen 3 Collection
+  "Absol", "Aggron", "Altaria", "Anorith", "Armaldo", "Aron", "Azurill", "Bagon", "Baltoy", "Banette", "Barboach", "Beautifly", "Beldum", "Breloom", "Cacnea", "Cacturne", "Camerupt", "Carvanha", "Cascoon", "Castform", "Chimecho", "Clamperl", "Claydol", "Corphish", "Cradily", "Crawdaunt", "Delcatty", "Dusclops", "Duskull", "Dustox", "Electrike", "Exploud", "Feebas", "Flygon", "Gardevoir", "Glalie", "Gorebyss", "Grumpig", "Gulpin", "Hariyama", "Huntail", "Illumise", "Kecleon", "Kirlia", "Lairon", "Lileep", "Linoone", "Lombre", "Lotad", "Loudred", "Ludicolo", "Lunatone", "Luvdisc", "Makuhita", "Manectric", "Masquerain", "Mawile", "Medicham", "Meditite", "Metagross", "Metang", "Mightyena", "Milotic", "Minun", "Nincada", "Ninjask", "Nosepass", "Numel", "Nuzleaf", "Pelipper", "Plusle", "Poochyena", "Ralts", "Relicanth", "Roselia", "Sableye", "Salamence", "Sealeo", "Seedot", "Seviper", "Sharpedo", "Shedinja", "Shelgon", "Shiftry", "Shroomish", "Shuppet", "Silcoon", "Skitty", "Slaking", "Slakoth", "Snorunt", "Solrock", "Spheal", "Spinda", "Spoink", "Surskit", "Swablu", "Swalot", "Swellow", "Taillow", "Torkoal", "Trapinch", "Tropius", "Vibrava", "Vigoroth", "Volbeat", "Wailmer", "Wailord", "Walrein", "Whiscash", "Whismur", "Wingull", "Wurmple", "Wynaut", "Zangoose", "Zigzagoon",
+
+  // Gen 4 (Sinnoh)
+  "Abomasnow", "Ambipom", "Bastiodon", "Bibarel", "Bidoof", "Bonsly", "Bronzong", "Bronzor", "Budew", "Buizel", "Buneary", "Burmy", "Carnivine", "Chatot", "Cherrim", "Cherubi", "Chingling", "Combee", "Cranidos", "Croagunk", "Drapion", "Drifblim", "Drifloon", "Dusknoir", "Electivire", "Finneon", "Floatzel", "Froslass", "Gabite", "Gallade", "Garchomp", "Gastrodon", "Gible", "Glaceon", "Glameow", "Gliscor", "Happiny", "Hippopotas", "Hippowdon", "Honchkrow", "Kricketot", "Kricketune", "Leafeon", "Lickilicky", "Lopunny", "Lucario", "Lumineon", "Luxio", "Luxray", "Magmortar", "Magnezone", "Mamoswine", "Mantyke", "Mime Jr.", "Mismagius", "Mothim", "Munchlax", "Pachirisu", "Porygon-Z", "Probopass", "Purugly", "Rampardos", "Rhyperior", "Riolu", "Roserade", "Rotom", "Shellos", "Shieldon", "Shinx", "Skorupi", "Skuntank", "Snover", "Spiritomb", "Staraptor", "Staravia", "Starly", "Stunky", "Tangrowth", "Togekiss", "Toxicroak", "Vespiquen", "Weavile", "Wormadam", "Yanmega",
+
+  // Gen 5 (Unova)
+  "Accelgor", "Alomomola", "Amoonguss", "Archen", "Archeops", "Audino", "Axew", "Basculin", "Beartic", "Beheeyem", "Bisharp", "Blitzle", "Boldore", "Bouffalant", "Braviary", "Carracosta", "Chandelure", "Cinccino", "Cofagrigus", "Conkeldurr", "Cottonee", "Crustle", "Cryogonal", "Cubchoo", "Darmanitan", "Darumaka", "Deerling", "Deino", "Drilbur", "Druddigon", "Ducklett", "Duosion", "Durant", "Dwebble", "Eelektrik", "Eelektross", "Elgyem", "Emolga", "Escavalier", "Excadrill", "Ferroseed", "Ferrothorn", "Foongus", "Fraxure", "Frillish", "Galvantula", "Garbodor", "Gigalith", "Golett", "Golurk", "Gothita", "Gothitelle", "Gothorita", "Gurdurr", "Haxorus", "Heatmor", "Herdier", "Hydreigon", "Jellicent", "Joltik", "Karrablast", "Klang", "Klink", "Klinklang", "Krokorok", "Krookodile", "Lampent", "Larvesta", "Leavanny", "Liepard", "Lilligant", "Lillipup", "Litwick", "Mandibuzz", "Maractus", "Mienfoo", "Mienshao", "Minccino", "Munna", "Musharna", "Palpitoad", "Panpour", "Pansage", "Pansear", "Patrat", "Pawniard", "Petilil", "Pidove", "Purrloin", "Reuniclus", "Roggenrola", "Rufflet", "Sandile", "Sawk", "Sawsbuck", "Scolipede", "Scraggy", "Scrafty", "Seismitoad", "Sewaddle", "Shelmet", "Sigilyph", "Simipour", "Simisage", "Simisear", "Solosis", "Stoutland", "Stunfisk", "Swadloon", "Swanna", "Swoobat", "Throh", "Timburr", "Tirtouga", "Tranquill", "Trubbish", "Tympole", "Tynamo", "Unfezant", "Vanillish", "Vanillite", "Vanilluxe", "Venipede", "Volcarona", "Vullaby", "Watchog", "Whimsicott", "Whirlipede", "Woobat", "Yamask", "Zebstrika", "Zoroark", "Zorua", "Zweilous"
 ];
 
 const normalizeName = (name: string): string => {
-  return name.toLowerCase()
+  let normalized = name.toLowerCase()
     .replace('♀', '-f')
     .replace('♂', '-m')
     .replace("'", '')
     .replace('.', '')
     .replace(' ', '-');
+  
+  // Specific PokeAPI mapping for base forms that are hyphenated
+  if (normalized === 'wormadam') return 'wormadam-plant';
+  if (normalized === 'mime-jr') return 'mime-jr';
+  if (normalized === 'basculin') return 'basculin-red-striped';
+  if (normalized === 'darmanitan') return 'darmanitan-standard';
+  return normalized;
 };
 
 export const fetchAllPokemonInCollection = async (): Promise<PokemonDetails[]> => {

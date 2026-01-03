@@ -46,9 +46,9 @@ export const Home: React.FC<HomeProps> = ({ onLaunch }) => {
 
           <div className="bg-slate-800/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl hover:border-white/20 transition-colors group">
             <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mb-6 text-white font-chakra font-bold text-xl">03</div>
-            <h3 className="text-white font-bold text-xl mb-3">Hoenn & Beyond</h3>
+            <h3 className="text-white font-bold text-xl mb-3">Master Roster</h3>
             <p className="text-slate-400 text-sm leading-relaxed">
-              Includes comprehensive data for the Hoenn region and legendary collections across the Pokémon world.
+              Lastly we have added the Legendaries, Mythicals, Ultra Beasts and Paradox Pokemon in A-Z to complete the full roster.
             </p>
           </div>
         </div>
