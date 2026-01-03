@@ -2,6 +2,7 @@ import { PokemonListResult, PokemonDetails, PokemonSpecies } from '../types';
 
 const BASE_URL = 'https://pokeapi.co/api/v2';
 const GQL_ENDPOINT = 'https://beta.pokeapi.co/graphql/v1beta';
+const CACHE_KEY = 'dexindex_pokemon_cache_v3';
 
 export const POKEMON_COLLECTION_NAMES = [
   // Starters (1-81)
@@ -15,7 +16,7 @@ export const POKEMON_COLLECTION_NAMES = [
   "Scorbunny", "Raboot", "Cinderace", "Sobble", "Drizzile", "Inteleon", "Grookey", "Thwackey", "Rillaboom",
   "Fuecoco", "Crocalor", "Skeledirge", "Quaxly", "Quaxwell", "Quaquaval", "Sprigatito", "Floragato", "Meowscarada",
   
-  // Expanded List (Starting at 82)
+  // Expanded List (Kanto/Johto)
   "Abra", "Aerodactyl", "Alakazam", "Arbok", "Arcanine", "Beedrill", "Bellsprout", "Butterfree", "Caterpie", "Chansey",
   "Clefable", "Clefairy", "Cloyster", "Cubone", "Dewgong", "Diglett", "Ditto", "Dodrio", "Doduo", "Dragonair",
   "Dragonite", "Dratini", "Drowzee", "Dugtrio", "Eevee", "Ekans", "Electabuzz", "Electrode", "Exeggcute", "Exeggutor",
@@ -29,10 +30,21 @@ export const POKEMON_COLLECTION_NAMES = [
   "Primeape", "Psyduck", "Raichu", "Rapidash", "Raticate", "Rattata", "Rhydon", "Rhyhorn", "Sandshrew", "Sandslash",
   "Scyther", "Seadra", "Seaking", "Seel", "Shellder", "Slowbro", "Slowpoke", "Snorlax", "Spearow", "Starmie",
   "Staryu", "Tangela", "Tauros", "Tentacool", "Tentacruel", "Vaporeon", "Venomoth", "Venonat", "Victreebel", "Vileplume",
-  "Voltorb", "Vulpix", "Weedle", "Weepinbell", "Weezing", "Wigglytuff", "Zubat"
+  "Voltorb", "Vulpix", "Weedle", "Weepinbell", "Weezing", "Wigglytuff", "Zubat",
+  "Aipom", "Ampharos", "Ariados", "Azumarill", "Bellossom", "Blissey", "Chinchou", "Cleffa", "Corsola", "Crobat",
+  "Delibird", "Donphan", "Dunsparce", "Elekid", "Espeon", "Flaaffy", "Forretress", "Furret", "Girafarig", "Gligar",
+  "Granbull", "Heracross", "Hitmontop", "Hoothoot", "Hoppip", "Houndoom", "Houndour", "Igglybuff", "Jumpluff", "Kingdra",
+  "Lanturn", "Larvitar", "Ledian", "Ledyba", "Magby", "Magcargo", "Mantine", "Mareep", "Marill", "Miltank",
+  "Misdreavus", "Murkrow", "Natu", "Noctowl", "Octillery", "Phanpy", "Pichu", "Piloswine", "Pineco", "Politoed",
+  "Porygon2", "Pupitar", "Quagsire", "Qwilfish", "Remoraid", "Scizor", "Sentret", "Shuckle", "Skarmory", "Skiploom",
+  "Slowking", "Slugma", "Smeargle", "Smoochum", "Sneasel", "Snubbull", "Spinarak", "Stantler", "Steelix", "Sudowoodo",
+  "Sunflora", "Sunkern", "Swinub", "Teddiursa", "Togepi", "Togetic", "Tyranitar", "Tyrogue", "Umbreon", "Unown",
+  "Ursaring", "Wobbuffet", "Wooper", "Xatu", "Yanma",
+
+  // New Gen 3 Collection (User Requested alphabetical list)
+  "Absol", "Aggron", "Altaria", "Anorith", "Armaldo", "Aron", "Azurill", "Bagon", "Baltoy", "Banette", "Barboach", "Beautifly", "Beldum", "Breloom", "Cacnea", "Cacturne", "Camerupt", "Carvanha", "Cascoon", "Castform", "Chimecho", "Clamperl", "Claydol", "Corphish", "Cradily", "Crawdaunt", "Delcatty", "Dusclops", "Duskull", "Dustox", "Electrike", "Exploud", "Feebas", "Flygon", "Gardevoir", "Glalie", "Gorebyss", "Grumpig", "Gulpin", "Hariyama", "Huntail", "Illumise", "Kecleon", "Kirlia", "Lairon", "Lileep", "Linoone", "Lombre", "Lotad", "Loudred", "Ludicolo", "Lunatone", "Luvdisc", "Makuhita", "Manectric", "Masquerain", "Mawile", "Medicham", "Meditite", "Metagross", "Metang", "Mightyena", "Milotic", "Minun", "Nincada", "Ninjask", "Nosepass", "Numel", "Nuzleaf", "Pelipper", "Plusle", "Poochyena", "Ralts", "Relicanth", "Roselia", "Sableye", "Salamence", "Sealeo", "Seedot", "Seviper", "Sharpedo", "Shedinja", "Shelgon", "Shiftry", "Shroomish", "Shuppet", "Silcoon", "Skitty", "Slaking", "Slakoth", "Snorunt", "Solrock", "Spheal", "Spinda", "Spoink", "Surskit", "Swablu", "Swalot", "Swellow", "Taillow", "Torkoal", "Trapinch", "Tropius", "Vibrava", "Vigoroth", "Volbeat", "Wailmer", "Wailord", "Walrein", "Whiscash", "Whismur", "Wingull", "Wurmple", "Wynaut", "Zangoose", "Zigzagoon"
 ];
 
-// Helper to normalize names for PokeAPI
 const normalizeName = (name: string): string => {
   return name.toLowerCase()
     .replace('♀', '-f')
@@ -43,6 +55,15 @@ const normalizeName = (name: string): string => {
 };
 
 export const fetchAllPokemonInCollection = async (): Promise<PokemonDetails[]> => {
+  const cachedData = localStorage.getItem(CACHE_KEY);
+  if (cachedData) {
+    try {
+      return JSON.parse(cachedData);
+    } catch (e) {
+      console.warn("Cache invalid, re-fetching...");
+    }
+  }
+
   const apiNames = POKEMON_COLLECTION_NAMES.map(n => normalizeName(n));
   
   const query = `
@@ -85,7 +106,7 @@ export const fetchAllPokemonInCollection = async (): Promise<PokemonDetails[]> =
     const { data } = await response.json();
     if (!data) return [];
     
-    return data.pokemon_v2_pokemon.map((p: any) => ({
+    const results: PokemonDetails[] = data.pokemon_v2_pokemon.map((p: any) => ({
       id: p.id,
       name: p.name,
       height: p.height,
@@ -102,7 +123,7 @@ export const fetchAllPokemonInCollection = async (): Promise<PokemonDetails[]> =
       abilities: p.pokemon_v2_pokemonabilities.map((a: any) => ({
         is_hidden: a.is_hidden,
         slot: a.slot,
-        ability: { name: a.pokemon_v2_ability.name, url: '' }
+        ability: { name: a.pokemon_v2_ability?.name || 'unknown', url: '' }
       })),
       sprites: {
         front_default: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png`,
@@ -116,33 +137,17 @@ export const fetchAllPokemonInCollection = async (): Promise<PokemonDetails[]> =
         }
       }
     }));
+
+    localStorage.setItem(CACHE_KEY, JSON.stringify(results));
+    return results;
   } catch (error) {
     console.error("GraphQL fetch failed", error);
     return [];
   }
 };
 
-export const fetchPokemonList = async (limit: number = 151, offset: number = 0): Promise<PokemonListResult[]> => {
-  const response = await fetch(`${BASE_URL}/pokemon?limit=${limit}&offset=${offset}`);
-  if (!response.ok) throw new Error('Failed to fetch pokemon list');
-  const data = await response.json();
-  return data.results;
-};
-
-export const fetchPokemonDetails = async (url: string): Promise<PokemonDetails> => {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error('Failed to fetch pokemon details');
-  return response.json();
-};
-
 export const fetchPokemonSpecies = async (id: number): Promise<PokemonSpecies> => {
   const response = await fetch(`${BASE_URL}/pokemon-species/${id}`);
   if (!response.ok) throw new Error('Failed to fetch pokemon species');
-  return response.json();
-};
-
-export const fetchPokemonDetailsByName = async (name: string): Promise<PokemonDetails> => {
-  const response = await fetch(`${BASE_URL}/pokemon/${name.toLowerCase()}`);
-  if (!response.ok) throw new Error('Failed to fetch pokemon details');
   return response.json();
 };
