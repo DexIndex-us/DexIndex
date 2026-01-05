@@ -17,6 +17,7 @@ export const Home: React.FC<HomeProps> = ({ onLaunch }) => {
       <div className="max-w-4xl w-full z-10 flex flex-col items-center">
         {/* Hero Section */}
         <div className="flex flex-col items-center text-center mb-24 animate-fade-in-up">
+          
           <Logo scale={1.5} className="mb-8 drop-shadow-[0_0_30px_rgba(227,53,13,0.3)]" />
           <h1 className="text-5xl md:text-7xl font-black text-white font-chakra tracking-tight mb-4 uppercase italic">
             DexIndex
@@ -48,7 +49,7 @@ export const Home: React.FC<HomeProps> = ({ onLaunch }) => {
             <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mb-6 text-white font-chakra font-bold text-xl">03</div>
             <h3 className="text-white font-bold text-xl mb-3">Master Roster</h3>
             <p className="text-slate-400 text-sm leading-relaxed">
-              Lastly we have added the Legendaries, Mythicals, Ultra Beasts and Paradox Pokemon in A-Z to complete the full roster.
+              Now including Galar, Hisui, and Paldea! Legendaries, Mythicals, and Paradox forms complete the collection.
             </p>
           </div>
         </div>

@@ -6,86 +6,90 @@ interface IntroAnimationProps {
 }
 
 export const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
-  const [phase, setPhase] = useState<'idle' | 'shaking' | 'bursting' | 'zooming'>('idle');
+  // Steps: 
+  // 'ball': Show shaking pokeball
+  // 'pop': Pokeball expands/fades, flash
+  // 'reveal': Logo springs in
+  // 'exit': Logo zooms in and fades out
+  const [step, setStep] = useState<'ball' | 'pop' | 'reveal' | 'exit'>('ball');
 
   useEffect(() => {
-    // Sequence Timeline - Exactly 3 seconds total
-    const shakeTimer = setTimeout(() => setPhase('shaking'), 400);
-    const burstTimer = setTimeout(() => setPhase('bursting'), 1900); // Shaking for 1.5s
-    const zoomTimer = setTimeout(() => setPhase('zooming'), 2600);   // Show logo reveal for 0.7s
-    const finishTimer = setTimeout(onComplete, 3000);              // Final 0.4s zoom out
+    // 1. Ball shakes for 1.8s
+    const timer1 = setTimeout(() => setStep('pop'), 1800);
+    
+    // 2. Pop lasts very short, triggers reveal immediately
+    const timer2 = setTimeout(() => setStep('reveal'), 1900);
+
+    // 3. Reveal holds for 1.5s, then exit
+    const timer3 = setTimeout(() => setStep('exit'), 3400);
+
+    // 4. Complete unmount
+    const timer4 = setTimeout(onComplete, 3900);
 
     return () => {
-      clearTimeout(shakeTimer);
-      clearTimeout(burstTimer);
-      clearTimeout(zoomTimer);
-      clearTimeout(finishTimer);
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+      clearTimeout(timer4);
     };
   }, [onComplete]);
 
   return (
-    <div 
-      className={`fixed inset-0 z-[100] flex items-center justify-center overflow-hidden transition-opacity duration-500 ease-out`}
-      style={{ 
-        background: 'linear-gradient(115deg, #E3350D 0%, #E3350D 70%, #3B4CCA 70%, #3B4CCA 100%)',
-        opacity: phase === 'zooming' ? 0 : 1,
-        pointerEvents: 'none'
-      }}
-    >
+    <div className={`fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center transition-opacity duration-500 ease-out ${step === 'exit' ? 'opacity-0' : 'opacity-100'}`}>
       
-      {/* Central Content (Logo & Name) */}
-      <div className={`absolute inset-0 flex items-center justify-center gap-6 sm:gap-12 transition-all duration-700 cubic-bezier(0.34, 1.56, 0.64, 1)
-        ${phase === 'idle' || phase === 'shaking' ? 'scale-0 opacity-0' : ''}
-        ${phase === 'bursting' ? 'scale-100 opacity-100' : ''}
-        ${phase === 'zooming' ? 'scale-[4] opacity-0 blur-sm' : ''}
-      `}>
-          {/* Left: Icon */}
-          <div className="drop-shadow-2xl relative z-10">
-             <Logo scale={1.2} showLabel={false} />
-          </div>
-          
-          {/* Right: Name */}
-          <div className="flex flex-col justify-center z-10">
-             <h1 className="text-6xl sm:text-8xl font-black text-white tracking-tighter leading-none font-chakra drop-shadow-[4px_4px_0px_rgba(0,0,0,0.5)]">
-               DEX
-             </h1>
-             <h1 className="text-6xl sm:text-8xl font-black text-slate-900 tracking-tighter leading-none font-chakra drop-shadow-[2px_2px_0px_rgba(255,255,255,0.3)]">
-               INDEX
-             </h1>
-          </div>
-      </div>
-
-      {/* Pokeball (The Cover) */}
-      <div className={`relative transition-all duration-300
-         ${phase === 'bursting' || phase === 'zooming' ? 'scale-[3] opacity-0 pointer-events-none' : 'scale-100 opacity-100'}
-      `}>
-         {/* Pokeball Graphic */}
-         <div className={`w-48 h-48 sm:w-64 sm:h-64 rounded-full border-[12px] border-slate-900 bg-white relative overflow-hidden shadow-2xl
-            ${phase === 'shaking' ? 'animate-shake' : ''}
-         `}>
-            {/* Top Half */}
-            <div className="absolute top-0 w-full h-1/2 bg-dex-red border-b-[6px] border-slate-900">
-               {/* Shine */}
-               <div className="absolute top-4 left-6 w-8 h-4 bg-white/30 rounded-full -rotate-12"></div>
+      {/* Pokeball Container */}
+      <div 
+        className={`absolute flex items-center justify-center transition-all duration-300 ease-in
+          ${step === 'ball' ? 'opacity-100 scale-100' : 'opacity-0 scale-[2] pointer-events-none'}
+        `}
+      >
+        <div className="relative w-48 h-48 animate-pokeball-shake">
+            {/* Ball Body */}
+            <div className="w-full h-full rounded-full border-[8px] border-slate-900 bg-white overflow-hidden shadow-2xl relative">
+                <div className="absolute top-0 w-full h-1/2 bg-dex-red border-b-[8px] border-slate-900"></div>
+                {/* Shine */}
+                <div className="absolute top-4 left-6 w-10 h-6 bg-white/20 rounded-full rotate-[-20deg]"></div>
+                {/* Shadow */}
+                <div className="absolute inset-0 rounded-full shadow-[inset_-10px_-10px_20px_rgba(0,0,0,0.2)]"></div>
             </div>
             
-            {/* Center Button */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-full border-[12px] border-slate-900 z-10 flex items-center justify-center">
-               <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full border-4 border-slate-300 bg-white transition-colors duration-200 ${phase === 'shaking' ? 'bg-red-200 animate-pulse' : ''}`}></div>
+            {/* Center Button Group */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-white rounded-full border-[8px] border-slate-900 flex items-center justify-center z-10 shadow-lg">
+               <div className={`w-8 h-8 rounded-full border border-slate-400 bg-white transition-colors duration-200 ${step === 'pop' ? 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.8)]' : ''}`}></div>
             </div>
-         </div>
+        </div>
+      </div>
+
+      {/* Burst Flash */}
+      <div className={`absolute inset-0 bg-white pointer-events-none transition-opacity duration-500 ease-out ${step === 'pop' ? 'opacity-40' : 'opacity-0'}`}></div>
+
+      {/* Logo & Text Reveal */}
+      <div 
+        className={`flex flex-col items-center justify-center transform transition-all duration-700 cubic-bezier(0.175, 0.885, 0.32, 1.275)
+          ${step === 'ball' || step === 'pop' ? 'scale-0 opacity-0' : ''}
+          ${step === 'reveal' ? 'scale-100 opacity-100' : ''}
+          ${step === 'exit' ? 'scale-150 opacity-0' : ''}
+        `}
+      >
+          <div className="drop-shadow-[0_0_30px_rgba(227,53,13,0.6)]">
+            <Logo scale={2.5} />
+          </div>
+          <h1 className="text-6xl font-black text-white mt-10 font-chakra tracking-[0.25em] uppercase drop-shadow-2xl">
+            DexIndex
+          </h1>
       </div>
 
       <style>{`
-        @keyframes shake {
+        @keyframes pokeball-shake {
           0%, 100% { transform: rotate(0deg); }
-          20% { transform: rotate(-10deg); }
-          40% { transform: rotate(10deg); }
+          20% { transform: rotate(-15deg); }
+          40% { transform: rotate(15deg); }
           60% { transform: rotate(-10deg); }
-          80% { transform: rotate(10deg); }
+          80% { transform: rotate(0deg); }
         }
-        .animate-shake {
-          animation: shake 0.5s ease-in-out infinite;
+        .animate-pokeball-shake {
+          animation: pokeball-shake 1.2s ease-in-out infinite;
+          transform-origin: bottom center;
         }
       `}</style>
     </div>

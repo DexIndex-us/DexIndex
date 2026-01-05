@@ -2,43 +2,84 @@ import React from 'react';
 
 interface LogoProps {
   scale?: number;
-  showLabel?: boolean;
+  showLabel?: boolean; // Kept for compatibility, though text is now integrated
   className?: string;
 }
 
-export const Logo: React.FC<LogoProps> = ({ scale = 1, showLabel = true, className = '' }) => {
-  // Base size reference
-  const baseSize = 176;
-  const size = baseSize * scale;
-
+export const Logo: React.FC<LogoProps> = ({ scale = 1, className = '' }) => {
+  // Base scale calculation
+  const size = 120 * scale; 
+  
   return (
     <div 
-      className={`relative flex flex-col items-center justify-center ${className}`}
-      style={{ width: size, height: showLabel ? size * 1.2 : size }}
+      className={`relative select-none ${className}`} 
+      style={{ width: size, height: size }}
+      aria-label="DexIndex Logo"
     >
+      {/* External Buttons - Positioned relative to main container */}
+      {/* Top Left (Grey) */}
       <div 
-        className="relative transition-transform duration-500 ease-out hover:scale-105 drop-shadow-2xl"
-        style={{ width: size, height: size }}
-      >
-        <img 
-          src="/logo.png" 
-          alt="DexIndex Logo" 
-          className="w-full h-full object-contain"
-          onError={(e) => {
-            // Fallback if image is missing
-            e.currentTarget.style.display = 'none';
-            e.currentTarget.parentElement!.classList.add('bg-dex-red', 'rounded-3xl', 'border-4', 'border-slate-900');
-            e.currentTarget.parentElement!.innerHTML = '<div class="flex items-center justify-center w-full h-full text-white font-black text-4xl">DI</div>';
-          }}
-        />
-      </div>
+        className="absolute w-[20%] h-[8%] bg-slate-400 rounded-t-sm border-2 border-slate-900 z-0"
+        style={{ top: '-4%', left: '15%' }}
+      />
+      {/* Top Right (Red) */}
+      <div 
+        className="absolute w-[15%] h-[6%] bg-red-600 rounded-t-sm border-2 border-slate-900 z-0"
+        style={{ top: '-3%', right: '15%' }}
+      />
+      {/* Side Button (Left) */}
+      <div 
+        className="absolute w-[6%] h-[15%] bg-slate-700 rounded-l-sm border-2 border-slate-900 z-0"
+        style={{ top: '20%', left: '-3%' }}
+      />
 
-      {/* Bottom Half Text */}
-      {showLabel && (
-        <div className="mt-2 text-center z-10">
-          <span className="font-sans font-bold text-white tracking-wider text-sm drop-shadow-md opacity-90" style={{ fontSize: `${14 * scale}px` }}>DexIndex</span>
+      {/* Main Body */}
+      <div className="relative w-full h-full z-10 rounded-[22%] overflow-hidden border-[3px] border-slate-900 shadow-2xl bg-slate-900 flex flex-col">
+        
+        {/* Top Section (Red) */}
+        <div className="h-[55%] w-full bg-[#E3350D] relative border-b-[3px] border-slate-900 box-border">
+            {/* Vents */}
+            <div className="absolute top-[12%] right-[8%] flex flex-col gap-[3px]">
+               <div className="w-[18px] h-[3px] bg-black/20 rounded-full"></div>
+               <div className="w-[18px] h-[3px] bg-black/20 rounded-full"></div>
+            </div>
         </div>
-      )}
+
+        {/* Bottom Section (Black/Dark) */}
+        <div className="h-[45%] w-full bg-[#1F2937] relative flex items-end justify-center pb-[8%]">
+            <span 
+              className="text-white font-sans font-bold tracking-tight leading-none"
+              style={{ fontSize: `${16 * scale}px` }}
+            >
+              DexIndex
+            </span>
+        </div>
+
+        {/* Center Logo Plate */}
+        <div 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[45%] bg-[#1F2937] rounded-xl border-[3px] border-slate-900 flex items-center justify-center shadow-lg"
+          style={{ marginTop: '-2%' }} 
+        >
+           {/* The D and I */}
+           <div className="relative w-full h-full flex items-center justify-center">
+              {/* Using CSS shapes/text for D I */}
+              <div 
+                className="font-black text-[#E3350D] tracking-tighter flex items-center justify-center"
+                style={{ 
+                  fontFamily: 'Chakra Petch, sans-serif', 
+                  fontSize: `${48 * scale}px`,
+                  textShadow: '2px 2px 0px #000'
+                }}
+              >
+                 <span className="translate-x-1">D</span>
+                 <span className="-translate-x-1">I</span>
+              </div>
+              
+              {/* Highlight Gloss */}
+              <div className="absolute top-0 right-0 w-[40%] h-[40%] bg-gradient-to-bl from-white/10 to-transparent rounded-tr-lg pointer-events-none"></div>
+           </div>
+        </div>
+      </div>
     </div>
   );
 };
