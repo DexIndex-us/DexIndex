@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { PokemonDetails } from './types';
-import { fetchAllPokemonInCollection, POKEMON_COLLECTION_NAMES, normalizePokemonName } from './services/pokeApi';
+import { fetchAllPokemonInCollection, getPokemonCustomId } from './services/pokeApi';
 import { PokemonCard } from './components/PokemonCard';
 import { PokemonDetail } from './components/PokemonDetail';
 import { Logo } from './components/Logo';
@@ -22,46 +22,41 @@ const App: React.FC = () => {
   useEffect(() => {
     let isMounted = true;
     
+    const processData = (details: PokemonDetails[]) => {
+       const detailsWithCustomId = details.map(p => ({
+          ...p,
+          customId: getPokemonCustomId(p.name) || p.id
+        }));
+        
+        // Sort by our custom collection order (which matches customId)
+        // If customId is undefined (fallback to API ID), push them to end or handle gracefully
+        const sortedList = detailsWithCustomId.sort((a, b) => (a.customId || 99999) - (b.customId || 99999));
+        return sortedList;
+    };
+
     const loadPokemon = async () => {
       setLoading(true);
       try {
-        const details = await fetchAllPokemonInCollection();
+        // We pass a callback to receive partial results (progressive loading)
+        const finalDetails = await fetchAllPokemonInCollection((partialData) => {
+          if (isMounted) {
+            const processed = processData(partialData);
+            setPokemonList(processed);
+            // As soon as we have some data, stop the full screen spinner
+            if (processed.length > 0) {
+              setLoading(false);
+            }
+          }
+        });
         
+        // Ensure final consistency
         if (isMounted) {
-          const nameToIdMap = new Map<string, number>();
-
-          // Build custom numbering based on the order of POKEMON_COLLECTION_NAMES
-          POKEMON_COLLECTION_NAMES.forEach((name, index) => {
-            const normalized = normalizePokemonName(name);
-            const customIndex = index + 1;
-            
-            nameToIdMap.set(normalized, customIndex);
-
-            // Variety overrides (kept for robustness if users search by variety name)
-            if (normalized === 'wormadam') nameToIdMap.set('wormadam-plant', customIndex);
-            if (normalized === 'basculin') nameToIdMap.set('basculin-red-striped', customIndex);
-            if (normalized === 'darmanitan') nameToIdMap.set('darmanitan-standard', customIndex);
-            if (normalized === 'giratina') nameToIdMap.set('giratina-altered', customIndex);
-            if (normalized === 'landorus') nameToIdMap.set('landorus-incarnate', customIndex);
-            if (normalized === 'thundurus') nameToIdMap.set('thundurus-incarnate', customIndex);
-            if (normalized === 'tornadus') nameToIdMap.set('tornadus-incarnate', customIndex);
-            if (normalized === 'deoxys') nameToIdMap.set('deoxys-normal', customIndex);
-            if (normalized === 'keldeo') nameToIdMap.set('keldeo-ordinary', customIndex);
-            if (normalized === 'meloetta') nameToIdMap.set('meloetta-aria', customIndex);
-            if (normalized === 'shaymin') nameToIdMap.set('shaymin-land', customIndex);
-          });
-
-          const detailsWithCustomId = details.map(p => ({
-            ...p,
-            customId: nameToIdMap.get(p.name.toLowerCase()) || p.id
-          }));
-
-          const sortedList = detailsWithCustomId.sort((a, b) => (a.customId || 0) - (b.customId || 0));
-          setPokemonList(sortedList);
+          const processed = processData(finalDetails);
+          setPokemonList(processed);
+          setLoading(false);
         }
       } catch (error) {
         console.error("Failed to load pokemon", error);
-      } finally {
         if (isMounted) setLoading(false);
       }
     };
@@ -155,6 +150,15 @@ const App: React.FC = () => {
                     <div className="text-center py-20">
                       <p className="text-xl text-slate-400">No Pokemon found matching "{searchTerm}"</p>
                     </div>
+                  )}
+                  
+                  {/* Subtle Loading Indicator for background fetching */}
+                  {loading && pokemonList.length > 0 && (
+                     <div className="fixed bottom-6 right-6 z-50 animate-bounce">
+                        <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center border border-white/10 shadow-lg">
+                           <div className="w-5 h-5 border-2 border-dex-blue border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                     </div>
                   )}
                 </>
               )}

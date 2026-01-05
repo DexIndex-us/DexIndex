@@ -72,10 +72,38 @@ export interface PokemonSpecies {
       url: string;
     };
   }[];
+  evolution_chain: {
+    url: string;
+  };
 }
 
 export interface PokemonFullData extends PokemonDetails {
   speciesData?: PokemonSpecies;
+}
+
+// Evolution Chain Types
+export interface EvolutionChainLink {
+  species: {
+    name: string;
+    url: string;
+  };
+  evolves_to: EvolutionChainLink[];
+  is_baby: boolean;
+  evolution_details: {
+    min_level?: number;
+    trigger?: {
+      name: string;
+    };
+    item?: {
+      name: string;
+    };
+    // Add other trigger details as needed
+  }[];
+}
+
+export interface EvolutionChainResponse {
+  chain: EvolutionChainLink;
+  id: number;
 }
 
 // Map standard types to Tailwind colors

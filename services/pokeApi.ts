@@ -1,7 +1,7 @@
-import { PokemonDetails, PokemonSpecies } from '../types';
+import { PokemonDetails, PokemonSpecies, EvolutionChainResponse } from '../types';
 
 const BASE_URL = 'https://pokeapi.co/api/v2';
-const CACHE_KEY = 'dexindex_pokemon_cache_v23';
+const CACHE_KEY = 'dexindex_pokemon_cache_v30';
 const CACHE_PREFIX = 'dexindex_pokemon_cache_';
 
 // Specific overrides for Pokemon that have different API names than their display names
@@ -11,6 +11,7 @@ const NAME_OVERRIDES: Record<string, string> = {
   "giratina": "giratina-altered",
   "shaymin": "shaymin-land",
   "basculin": "basculin-red-striped",
+  "basculegion": "basculegion-male",
   "darmanitan": "darmanitan-standard",
   "tornadus": "tornadus-incarnate",
   "thundurus": "thundurus-incarnate",
@@ -31,7 +32,14 @@ const NAME_OVERRIDES: Record<string, string> = {
   "indeedee": "indeedee-male",
   "morpeko": "morpeko-full-belly",
   "urshifu": "urshifu-single-strike",
-  "meowstic": "meowstic-male"
+  "meowstic": "meowstic-male",
+  // Gen 9 Overrides
+  "dudunsparce": "dudunsparce-two-segment",
+  "palafin": "palafin-zero",
+  "maushold": "maushold-family-of-four",
+  "tatsugiri": "tatsugiri-curly",
+  "squawkabilly": "squawkabilly-green-plumage",
+  "oinkologne": "oinkologne-male"
 };
 
 // Helper to normalize names for PokeAPI (matches standard PokeAPI naming conventions)
@@ -76,20 +84,87 @@ const transformPokemonData = (data: any): PokemonDetails => {
   };
 };
 
+// Internal helper for robust fetching with timeout and race condition protection
+const fetchWithRetry = async (url: string, retries = 2): Promise<any> => {
+  const fetchWithTimeout = async (resource: string, options: any = {}) => {
+    const { timeout = 6000 } = options; // 6 second timeout
+    
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    
+    try {
+      // Promise race ensures we reject if fetch hangs even if abort signal fails weirdly
+      const response = await Promise.race([
+        fetch(resource, { ...options, signal: controller.signal }),
+        new Promise<Response>((_, reject) => 
+          setTimeout(() => reject(new Error("Request timeout")), timeout)
+        )
+      ]);
+      
+      clearTimeout(id);
+      return response;
+    } catch (error) {
+      clearTimeout(id);
+      throw error;
+    }
+  };
+
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const res = await fetchWithTimeout(url);
+      if (!res.ok) {
+        if (res.status === 404) throw new Error(`404 Not Found: ${url}`);
+        throw new Error(`HTTP ${res.status}`);
+      }
+      return await res.json();
+    } catch (err) {
+      if (i === retries) throw err;
+      // Exponential backoff
+      await new Promise(resolve => setTimeout(resolve, 200 * Math.pow(2, i)));
+    }
+  }
+};
+
 // Fetch a single Pokemon by name or ID
 export const fetchPokemonByName = async (nameOrId: string | number): Promise<PokemonDetails | null> => {
   try {
     const normalizedName = typeof nameOrId === 'string' ? normalizePokemonName(nameOrId) : nameOrId;
-    const res = await fetch(`${BASE_URL}/pokemon/${normalizedName}`);
-    if (!res.ok) {
-      console.warn(`Failed to fetch ${nameOrId}: ${res.status}`);
-      return null;
-    }
-    const rawData = await res.json();
+    const rawData = await fetchWithRetry(`${BASE_URL}/pokemon/${normalizedName}`, 2);
     return transformPokemonData(rawData);
   } catch (error) {
-    console.error(`Error fetching ${nameOrId}`, error);
+    console.warn(`Error fetching ${nameOrId}:`, error);
     return null;
+  }
+};
+
+export const fetchEvolutionChain = async (url: string): Promise<EvolutionChainResponse | null> => {
+  try {
+    return await fetchWithRetry(url, 2);
+  } catch (error) {
+    console.error("Failed to fetch evolution chain", error);
+    return null;
+  }
+};
+
+export const fetchAbilityDescription = async (url: string): Promise<string> => {
+  try {
+    const data = await fetchWithRetry(url, 2);
+    
+    // 1. Try to find English short_effect
+    const englishEffect = data.effect_entries?.find((e: any) => e.language.name === 'en');
+    if (englishEffect?.short_effect) return englishEffect.short_effect;
+    if (englishEffect?.effect) return englishEffect.effect;
+
+    // 2. Fallback to flavor_text
+    const flavorEntry = data.flavor_text_entries?.find((e: any) => e.language.name === 'en');
+    if (flavorEntry?.flavor_text) {
+      return flavorEntry.flavor_text.replace(/\f/g, ' '); 
+    }
+
+    return "No description available.";
+  } catch (error) {
+    console.error("Failed to fetch ability description", error);
+    return "Could not load ability details.";
   }
 };
 
@@ -101,6 +176,9 @@ export const fetchPokemonByName = async (nameOrId: string | number): Promise<Pok
 // 5. Gen 4 Additional (A-Z)
 // 6. Gen 5 Additional (A-Z)
 // 7. Gen 6 Additional (A-Z)
+// 8. Gen 7 Additional (A-Z)
+// 9. Gen 8 Additional (A-Z)
+// 10. Gen 9 Additional (A-Z)
 const POKEMON_COLLECTION = [
   // --- STARTERS (0001 - 0081) ---
   // Gen 1
@@ -270,17 +348,93 @@ const POKEMON_COLLECTION = [
   "Pancham", "Pangoro", "Phantump", "Pumpkaboo", "Pyroar", 
   "Scatterbug", "Skiddo", "Skrelp", "Sliggoo", "Slurpuff", "Spewpa", "Spritzee", "Swirlix", "Sylveon", 
   "Talonflame", "Trevenant", "Tyrantrum", "Tyrunt", 
-  "Vivillon"
+  "Vivillon",
+
+  // --- GEN 7 ADDITIONAL ---
+  "Araquanid", "Bewear", "Bounsweet", "Bruxish", 
+  "Charjabug", "Comfey", "Crabominable", "Crabrawler", "Cutiefly", 
+  "Dewpider", "Dhelmise", "Drampa", 
+  "Fomantis", 
+  "Golisopod", "Grubbin", "Gumshoos", 
+  "Hakamo-o", 
+  "Jangmo-o", 
+  "Komala", "Kommo-o", 
+  "Lurantis", "Lycanroc", 
+  "Mareanie", "Mimikyu", "Minior", "Morelull", "Mudbray", "Mudsdale", 
+  "Oranguru", "Oricorio", 
+  "Palossand", "Passimian", "Pikipek", "Pyukumuku", 
+  "Ribombee", "Rockruff", 
+  "Salandit", "Salazzle", "Sandygast", "Shiinotic", "Steenee", "Stufful", 
+  "Togedemaru", "Toucannon", "Toxapex", "Trumbeak", "Tsareena", "Turtonator", 
+  "Vikavolt", 
+  "Wimpod", "Wishiwashi", 
+  "Yungoos",
+
+  // --- GEN 8 ADDITIONAL ---
+  "Alcremie", "Appletun", "Applin", "Arctovish", "Arctozolt", "Arrokuda", 
+  "Barraskewda", "Basculegion", "Blipbug", "Boltund", 
+  "Carkol", "Centiskorch", "Chewtle", "Clobbopus", "Coalossal", "Copperajah", "Corviknight", "Corvisquire", "Cramorant", "Cufant", "Cursola", 
+  "Dottler", "Dracovish", "Dracozolt", "Dragapult", "Drakloak", "Drednaw", "Dreepy", "Dubwool", "Duraludon", 
+  "Eiscue", "Eldegoss", 
+  "Falinks", "Flapple", "Frosmoth", 
+  "Gossifleur", "Grapploct", "Greedent", "Grimmsnarl", 
+  "Hatenna", "Hatterene", "Hattrem", 
+  "Impidimp", "Indeedee", 
+  "Kleavor", 
+  "Milcery", "Morgrem", "Morpeko", "Mr. Rime", 
+  "Nickit", 
+  "Obstagoon", "Orbeetle", "Overqwil", 
+  "Perrserker", "Pincurchin", "Polteageist", 
+  "Rolycoly", "Rookidee", "Runerigus", 
+  "Sandaconda", "Silicobra", "Sinistea", "Sirfetch'd", "Sizzlipede", "Skwovet", "Sneasler", "Snom", "Stonjourner", 
+  "Thievul", "Toxel", "Toxtricity", 
+  "Ursaluna", 
+  "Wooloo", "Wyrdeer", 
+  "Yamper",
+
+  // --- GEN 9 ADDITIONAL ---
+  "Annihilape", "Archaludon", "Arboliva", "Arctibax", "Armarouge", 
+  "Baxcalibur", "Bellibolt", "Bombirdier", "Brambleghast", "Bramblin", 
+  "Capsakid", "Ceruledge", "Cetitan", "Cetoddle", "Charcadet", "Clodsire", "Cyclizar", 
+  "Dachsbun", "Dipplin", "Dolliv", "Dondozo", "Dudunsparce", 
+  "Espathra", 
+  "Farigiraf", "Fidough", "Finizen", "Flamigo", "Flittle", "Frigibax", 
+  "Garganacl", "Gholdengo", "Gimmighoul", "Glimmet", "Glimmora", "Grafaiai", "Greavard", 
+  "Houndstone", "Hydrapple", 
+  "Kilowattrel", "Kingambit", "Klawf", 
+  "Lechonk", "Lokix", 
+  "Mabosstiff", "Maschiff", "Maushold", 
+  "Nacli", "Naclstack", "Nymble", 
+  "Oinkologne", "Orthworm", 
+  "Palafin", "Pawmi", "Pawmo", "Pawmot", "Poltchageist", 
+  "Rabsca", "Rellor", "Revavroom", 
+  "Scovillain", "Shroodle", "Sinistcha", "Smoliv", "Spidops", "Squawkabilly", 
+  "Tadbulb", "Tandemaus", "Tarountula", "Tatsugiri", "Tinkatink", "Tinkaton", "Tinkatuff", "Toedscool", "Toedscruel", 
+  "Varoom", "Veluza", 
+  "Wattrel", "Wiglett", "Wugtrio"
 ];
 
 export const POKEMON_COLLECTION_NAMES = POKEMON_COLLECTION;
 
+// NEW: ID Mapping for custom numbering
+const CUSTOM_ID_MAP = new Map<string, number>();
+
+// Initialize map immediately
+POKEMON_COLLECTION_NAMES.forEach((name, index) => {
+  const normalized = normalizePokemonName(name);
+  const customId = index + 1;
+  CUSTOM_ID_MAP.set(normalized, customId);
+  // Also map the original name lowercased just in case
+  CUSTOM_ID_MAP.set(name.toLowerCase(), customId);
+});
+
+export const getPokemonCustomId = (name: string): number | undefined => {
+  const n = normalizePokemonName(name);
+  return CUSTOM_ID_MAP.get(n) || CUSTOM_ID_MAP.get(name.toLowerCase());
+};
+
 export const fetchPokemonSpecies = async (id: number): Promise<PokemonSpecies> => {
-  const response = await fetch(`${BASE_URL}/pokemon-species/${id}`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch species data for ID: ${id}`);
-  }
-  return response.json();
+  return await fetchWithRetry(`${BASE_URL}/pokemon-species/${id}`, 1);
 };
 
 const cleanupOldCaches = () => {
@@ -299,7 +453,7 @@ const cleanupOldCaches = () => {
   }
 };
 
-export const fetchAllPokemonInCollection = async (): Promise<PokemonDetails[]> => {
+export const fetchAllPokemonInCollection = async (onIntermediate?: (data: PokemonDetails[]) => void): Promise<PokemonDetails[]> => {
   // 1. Cleanup old caches to free up space
   cleanupOldCaches();
 
@@ -310,6 +464,7 @@ export const fetchAllPokemonInCollection = async (): Promise<PokemonDetails[]> =
       const parsed = JSON.parse(cachedData);
       if (Array.isArray(parsed) && parsed.length > 0) {
         console.log("Loaded from cache");
+        if (onIntermediate) onIntermediate(parsed);
         return parsed;
       }
     } catch (e) {
@@ -318,28 +473,41 @@ export const fetchAllPokemonInCollection = async (): Promise<PokemonDetails[]> =
     }
   }
 
-  // 3. Fetch from API with Concurrency Limit
-  // We use a worker pool with a concurrency limit to significantly speed up loading
-  // while preventing browser network errors from too many simultaneous connections.
+  // 3. Fetch from API with Sliding Window Concurrency
+  // This is much smoother than strict batching. It always keeps X requests active.
   console.log("Fetching fresh data...");
   
   const results: (PokemonDetails | null)[] = new Array(POKEMON_COLLECTION_NAMES.length).fill(null);
-  let currentIndex = 0;
-  // Use a moderate concurrency limit (15) to be "super small" relative to total but fast in aggregate.
-  const CONCURRENCY_LIMIT = 15;
+  let nextIndex = 0;
+  let completedCount = 0;
+  
+  // Concurrency Limit: 24 is safe for browsers and very fast.
+  const CONCURRENCY_LIMIT = 24;
+  // Update UI every 5 items for smooth "bit-by-bit" feel
+  const UPDATE_THRESHOLD = 5;
 
   const worker = async () => {
-    while (currentIndex < POKEMON_COLLECTION_NAMES.length) {
-      const index = currentIndex++;
-      // Check bounds
-      if (index >= POKEMON_COLLECTION_NAMES.length) break;
+    while (nextIndex < POKEMON_COLLECTION_NAMES.length) {
+      // Atomic increment
+      const i = nextIndex++;
       
-      const name = POKEMON_COLLECTION_NAMES[index];
+      // Bounds check
+      if (i >= POKEMON_COLLECTION_NAMES.length) break;
+      
+      const name = POKEMON_COLLECTION_NAMES[i];
       try {
-        results[index] = await fetchPokemonByName(name);
+        results[i] = await fetchPokemonByName(name);
       } catch (error) {
         console.error(`Error fetching ${name}`, error);
-        results[index] = null;
+        results[i] = null;
+      }
+
+      completedCount++;
+      
+      // Smooth Progressive Update
+      if (onIntermediate && completedCount % UPDATE_THRESHOLD === 0) {
+        const currentValid = results.filter((p): p is PokemonDetails => p !== null);
+        onIntermediate(currentValid);
       }
     }
   };
