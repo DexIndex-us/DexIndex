@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { PokemonDetails } from './types';
 import { fetchAllPokemonInCollection, getPokemonCustomId } from './services/pokeApi';
 import { PokemonCard } from './components/PokemonCard';
@@ -11,10 +11,14 @@ const App: React.FC = () => {
   const [view, setView] = useState<'home' | 'dex'>('home');
   const [pokemonList, setPokemonList] = useState<PokemonDetails[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Progress State
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
+  
   const [selectedPokemon, setSelectedPokemon] = useState<PokemonDetails | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showIntro, setShowIntro] = useState(true);
-  
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [view]);
@@ -28,28 +32,19 @@ const App: React.FC = () => {
           customId: getPokemonCustomId(p.name) || p.id
         }));
         
-        // Sort by our custom collection order (which matches customId)
-        // If customId is undefined (fallback to API ID), push them to end or handle gracefully
-        const sortedList = detailsWithCustomId.sort((a, b) => (a.customId || 99999) - (b.customId || 99999));
-        return sortedList;
+        // Sort by our custom collection order
+        return detailsWithCustomId.sort((a, b) => (a.customId || 99999) - (b.customId || 99999));
     };
 
     const loadPokemon = async () => {
       setLoading(true);
       try {
-        // We pass a callback to receive partial results (progressive loading)
-        const finalDetails = await fetchAllPokemonInCollection((partialData) => {
+        const finalDetails = await fetchAllPokemonInCollection((current, total) => {
           if (isMounted) {
-            const processed = processData(partialData);
-            setPokemonList(processed);
-            // As soon as we have some data, stop the full screen spinner
-            if (processed.length > 0) {
-              setLoading(false);
-            }
+            setProgress({ current, total });
           }
         });
         
-        // Ensure final consistency
         if (isMounted) {
           const processed = processData(finalDetails);
           setPokemonList(processed);
@@ -130,15 +125,29 @@ const App: React.FC = () => {
                </div>
             </header>
 
-            <main className="container mx-auto px-4 py-12 flex-1">
-              {loading && pokemonList.length === 0 ? (
-                <div className="flex flex-col justify-center items-center py-20 space-y-4">
-                   <div className="w-16 h-16 border-4 border-dex-red border-t-transparent rounded-full animate-spin"></div>
-                   <p className="text-slate-400 font-medium animate-pulse">Syncing Dex Data...</p>
+            <main className="container mx-auto px-4 py-12 flex-1 min-h-screen">
+              {loading ? (
+                <div className="flex flex-col justify-center items-center py-40 space-y-8 animate-fade-in">
+                   <div className="w-24 h-24 border-8 border-slate-800 border-t-dex-red rounded-full animate-spin"></div>
+                   <div className="w-full max-w-md space-y-2">
+                     <div className="flex justify-between text-sm font-bold text-slate-400 uppercase tracking-widest">
+                       <span>Downloading Dex Data</span>
+                       <span>{Math.round((progress.current / (progress.total || 1)) * 100)}%</span>
+                     </div>
+                     <div className="h-4 bg-slate-800 rounded-full overflow-hidden border border-white/10">
+                       <div 
+                         className="h-full bg-gradient-to-r from-dex-red to-dex-yellow transition-all duration-300 ease-out"
+                         style={{ width: `${(progress.current / (progress.total || 1)) * 100}%` }}
+                       ></div>
+                     </div>
+                     <p className="text-center text-slate-500 text-xs mt-2">
+                       {progress.current} / {progress.total} entries
+                     </p>
+                   </div>
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 content-visibility-auto">
                     {filteredPokemon.map((pokemon) => (
                       <div key={pokemon.id} className="animate-fade-in">
                         <PokemonCard pokemon={pokemon} onClick={setSelectedPokemon} />
@@ -146,19 +155,10 @@ const App: React.FC = () => {
                     ))}
                   </div>
                   
-                  {filteredPokemon.length === 0 && (
+                  {filteredPokemon.length === 0 && !loading && (
                     <div className="text-center py-20">
                       <p className="text-xl text-slate-400">No Pokemon found matching "{searchTerm}"</p>
                     </div>
-                  )}
-                  
-                  {/* Subtle Loading Indicator for background fetching */}
-                  {loading && pokemonList.length > 0 && (
-                     <div className="fixed bottom-6 right-6 z-50 animate-bounce">
-                        <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center border border-white/10 shadow-lg">
-                           <div className="w-5 h-5 border-2 border-dex-blue border-t-transparent rounded-full animate-spin"></div>
-                        </div>
-                     </div>
                   )}
                 </>
               )}

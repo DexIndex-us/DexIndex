@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Logo } from './Logo';
 
 interface IntroAnimationProps {
@@ -12,19 +12,28 @@ export const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) =>
   // 'reveal': Logo springs in
   // 'exit': Logo zooms in and fades out
   const [step, setStep] = useState<'ball' | 'pop' | 'reveal' | 'exit'>('ball');
+  
+  // Use a ref to ensure the callback is stable and doesn't trigger effect re-runs
+  // This prevents the animation from resetting if the parent component re-renders (e.g. data loading)
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
-    // 1. Ball shakes for 1.8s
-    const timer1 = setTimeout(() => setStep('pop'), 1800);
+    // 1. Ball shakes for 2.0s (Fixed duration)
+    const timer1 = setTimeout(() => setStep('pop'), 2000);
     
     // 2. Pop lasts very short, triggers reveal immediately
-    const timer2 = setTimeout(() => setStep('reveal'), 1900);
+    const timer2 = setTimeout(() => setStep('reveal'), 2100);
 
     // 3. Reveal holds for 1.5s, then exit
-    const timer3 = setTimeout(() => setStep('exit'), 3400);
+    const timer3 = setTimeout(() => setStep('exit'), 3600);
 
     // 4. Complete unmount
-    const timer4 = setTimeout(onComplete, 3900);
+    const timer4 = setTimeout(() => {
+      onCompleteRef.current?.();
+    }, 4100);
 
     return () => {
       clearTimeout(timer1);
@@ -32,7 +41,7 @@ export const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) =>
       clearTimeout(timer3);
       clearTimeout(timer4);
     };
-  }, [onComplete]);
+  }, []); // Empty dependency array ensures timing is absolute from mount
 
   return (
     <div className={`fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center transition-opacity duration-500 ease-out ${step === 'exit' ? 'opacity-0' : 'opacity-100'}`}>
@@ -88,7 +97,8 @@ export const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) =>
           80% { transform: rotate(0deg); }
         }
         .animate-pokeball-shake {
-          animation: pokeball-shake 1.2s ease-in-out infinite;
+          /* Matched to 1s so it shakes exactly twice in the 2s window */
+          animation: pokeball-shake 1s ease-in-out infinite;
           transform-origin: bottom center;
         }
       `}</style>

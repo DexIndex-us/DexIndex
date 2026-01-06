@@ -50,6 +50,10 @@ export interface PokemonDetails {
     };
   };
   abilities: PokemonAbility[];
+  species: {
+    name: string;
+    url: string;
+  };
 }
 
 export interface PokemonSpecies {

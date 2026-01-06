@@ -6,6 +6,15 @@ interface HomeProps {
 }
 
 export const Home: React.FC<HomeProps> = ({ onLaunch }) => {
+  
+  const handleLaunch = () => {
+    // Wrap in timeout to allow the button click animation/state to render 
+    // before the heavy main thread work of mounting the Dex view begins.
+    setTimeout(() => {
+      onLaunch();
+    }, 10);
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center px-4 py-20 relative overflow-hidden">
       {/* Background Decorative Elements */}
@@ -125,7 +134,7 @@ export const Home: React.FC<HomeProps> = ({ onLaunch }) => {
         {/* Action Button */}
         <div className="flex flex-col items-center mb-20 animate-fade-in-up" style={{ animationDelay: '0.7s' }}>
           <button 
-            onClick={onLaunch}
+            onClick={handleLaunch}
             className="group relative px-16 py-6 rounded-2xl bg-white text-slate-900 font-black text-2xl tracking-wider uppercase transition-all duration-300 hover:bg-dex-red hover:text-white hover:scale-105 active:scale-95 shadow-[0_0_60px_rgba(255,255,255,0.1)]"
           >
             Enter the Pokedex

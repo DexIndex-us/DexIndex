@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PokemonDetails, PokemonSpecies, EvolutionChainLink, PokemonAbility } from '../types';
-import { fetchPokemonSpecies, fetchPokemonByName, fetchEvolutionChain, getPokemonCustomId, fetchAbilityDescription } from '../services/pokeApi';
+import { fetchPokemonSpecies, fetchPokemonByName, fetchEvolutionChain, getPokemonCustomId, fetchAbilityDescription, fetchPokemonSpeciesByUrl } from '../services/pokeApi';
 import { TypeBadge } from './TypeBadge';
 import { StatBar } from './StatBar';
 
@@ -128,8 +128,14 @@ export const PokemonDetail: React.FC<PokemonDetailProps> = ({ pokemon, onClose }
 
     const loadData = async () => {
       try {
-        // Fetch species using the base ID
-        const sData = await fetchPokemonSpecies(displayPokemon.id);
+        let sData;
+        // Use species URL if available (handles alternate forms where ID != species ID)
+        if (displayPokemon.species?.url) {
+           sData = await fetchPokemonSpeciesByUrl(displayPokemon.species.url);
+        } else {
+           // Fallback mainly for backward compatibility or if data is missing
+           sData = await fetchPokemonSpecies(displayPokemon.id);
+        }
         
         if (isMounted) {
           setSpecies(sData);
@@ -155,7 +161,7 @@ export const PokemonDetail: React.FC<PokemonDetailProps> = ({ pokemon, onClose }
       isMounted = false;
       document.body.style.overflow = 'unset';
     };
-  }, [displayPokemon.id]); // Depend on displayPokemon.id to trigger updates on evolution switch
+  }, [displayPokemon.id, displayPokemon.species]); // Depend on species as well
 
   // Batched loading of form sprites with safety
   useEffect(() => {

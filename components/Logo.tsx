@@ -68,11 +68,12 @@ export const Logo: React.FC<LogoProps> = ({ scale = 1, className = '' }) => {
                 style={{ 
                   fontFamily: 'Chakra Petch, sans-serif', 
                   fontSize: `${48 * scale}px`,
-                  textShadow: '2px 2px 0px #000'
+                  textShadow: '2px 2px 0px #000',
+                  columnGap: '0.1em'
                 }}
               >
-                 <span className="translate-x-1">D</span>
-                 <span className="-translate-x-1">I</span>
+                 <span>D</span>
+                 <span>I</span>
               </div>
               
               {/* Highlight Gloss */}
